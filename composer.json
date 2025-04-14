@@ -10,6 +10,8 @@
     "symfony/dependency-injection": "^6.4",
     "symfony/http-kernel": "^6.4",
     "symfony/framework-bundle": "^6.4",
+    "symfony/service-contracts": "^2.5 || ^3",
+    "yiisoft/json": "^1.0",
     "tourze/json-rpc-core": "0.0.*",
     "tourze/json-rpc-security-bundle": "0.0.*"
   },
