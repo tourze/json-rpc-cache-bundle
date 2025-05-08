@@ -15,7 +15,10 @@
     "yiisoft/json": "^1.0",
     "tourze/json-rpc-core": "^0.0.6",
     "tourze/json-rpc-security-bundle": "0.0.*",
-    "psr/log": "^3|^2|^1"
+    "psr/log": "^3|^2|^1",
+    "symfony/property-access": "^6.4",
+    "symfony/event-dispatcher-contracts": "^2.5 | ^3",
+    "psr/container": "^1.1|^2.0"
   },
   "autoload": {
     "psr-4": {
