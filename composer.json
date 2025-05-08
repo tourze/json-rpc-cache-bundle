@@ -14,7 +14,8 @@
     "symfony/yaml": "^6.4 || ^7.1",
     "yiisoft/json": "^1.0",
     "tourze/json-rpc-core": "^0.0.6",
-    "tourze/json-rpc-security-bundle": "0.0.*"
+    "tourze/json-rpc-security-bundle": "0.0.*",
+    "psr/log": "^3|^2|^1"
   },
   "autoload": {
     "psr-4": {
