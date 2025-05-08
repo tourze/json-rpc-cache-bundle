@@ -17,7 +17,7 @@
     "symfony/service-contracts": "^3.5",
     "symfony/yaml": "^6.4 || ^7.1",
     "tourze/json-rpc-core": "^0.0.6",
-    "tourze/json-rpc-lock-bundle": "0.0.*",
+    "tourze/json-rpc-lock-bundle": "0.1.*",
     "tourze/json-rpc-security-bundle": "0.0.*",
     "yiisoft/json": "^1.0"
   },
