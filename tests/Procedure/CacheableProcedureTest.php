@@ -47,17 +47,17 @@ class TestCacheableProcedure extends CacheableProcedure
         $this->cacheTags = $tags;
     }
 
-    protected function getCacheKey(JsonRpcRequest $request): string
+    public function getCacheKey(JsonRpcRequest $request): string
     {
         return $this->cacheKey;
     }
 
-    protected function getCacheDuration(JsonRpcRequest $request): int
+    public function getCacheDuration(JsonRpcRequest $request): int
     {
         return $this->cacheDuration;
     }
 
-    protected function getCacheTags(JsonRpcRequest $request): iterable
+    public function getCacheTags(JsonRpcRequest $request): iterable
     {
         return $this->cacheTags;
     }
