@@ -21,9 +21,9 @@ class TestCacheableProcedure extends CacheableProcedure
         return $this->cacheKey;
     }
     
-    public function setCacheKey(string $cacheKey): void
+    public function setCacheKey(?string $cacheKey): void
     {
-        $this->cacheKey = $cacheKey;
+        $this->cacheKey = $cacheKey ?? '';
     }
     
     public function getCacheDuration(JsonRpcRequest $request): int
