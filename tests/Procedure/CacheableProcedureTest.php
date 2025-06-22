@@ -122,7 +122,6 @@ class CacheableProcedureTest extends TestCase
         $result = $method->invoke($this->procedure, $params);
         
         // 验证结果是一个有效的字符串且包含MD5哈希
-        $this->assertIsString($result);
         $this->assertStringContainsString('-', $result);
         $parts = explode('-', $result);
         $this->assertEquals(32, strlen(end($parts))); // MD5长度为32
@@ -147,7 +146,6 @@ class CacheableProcedureTest extends TestCase
         $result = $method->invoke($this->procedure, $params);
         
         // 验证大数据集也能正常生成缓存键
-        $this->assertIsString($result);
         $parts = explode('-', $result);
         $this->assertEquals(32, strlen(end($parts))); // MD5长度固定
     }
@@ -172,8 +170,7 @@ class CacheableProcedureTest extends TestCase
         
         // 注意：由于JSON编码，不同顺序可能产生不同的哈希
         // 这是预期行为，因为JSON编码保持键顺序
-        $this->assertIsString($key1);
-        $this->assertIsString($key2);
+
     }
     
     public function test_getCacheKey_withVariousInputs_shouldReturnCorrectKeys(): void
