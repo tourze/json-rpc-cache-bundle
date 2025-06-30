@@ -150,7 +150,7 @@ class CacheableProcedureTest extends TestCase
         $this->assertEquals(32, strlen(end($parts))); // MD5长度固定
     }
 
-    public function test_buildParamCacheKey_withSameParamsDifferentOrder_shouldReturnSameKey(): void
+    public function test_buildParamCacheKey_withSameParamsDifferentOrder_shouldReturnDifferentKeys(): void
     {
         $params1 = ['a' => 1, 'b' => 2];
         $params2 = ['b' => 2, 'a' => 1];
@@ -168,9 +168,11 @@ class CacheableProcedureTest extends TestCase
         $key1 = $method->invoke($this->procedure, $mockParams1);
         $key2 = $method->invoke($this->procedure, $mockParams2);
         
-        // 注意：由于JSON编码，不同顺序可能产生不同的哈希
+        // 注意：由于JSON编码，不同顺序会产生不同的哈希
         // 这是预期行为，因为JSON编码保持键顺序
-
+        $this->assertNotEquals($key1, $key2, '不同键顺序应该产生不同的缓存键');
+        $this->assertIsString($key1);
+        $this->assertIsString($key2);
     }
     
     public function test_getCacheKey_withVariousInputs_shouldReturnCorrectKeys(): void

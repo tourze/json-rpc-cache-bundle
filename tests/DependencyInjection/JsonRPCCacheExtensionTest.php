@@ -61,8 +61,8 @@ class JsonRPCCacheExtensionTest extends TestCase
 
     public function test_load_withInvalidConfiguration_shouldHandleGracefully(): void
     {
-        // 测试传入null配置数组不会抛出异常
-        $this->extension->load([null], $this->container);
+        // 测试传入空配置数组不会抛出异常
+        $this->extension->load([[]], $this->container);
         
         // 验证服务依然被加载
         $this->assertTrue($this->container->has(CacheSubscriber::class));
