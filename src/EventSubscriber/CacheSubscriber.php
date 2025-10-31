@@ -2,20 +2,24 @@
 
 namespace Tourze\JsonRPCCacheBundle\EventSubscriber;
 
-use Symfony\Component\Cache\Adapter\AdapterInterface;
+use Monolog\Attribute\WithMonologChannel;
+use Psr\Cache\CacheItemPoolInterface;
+use Psr\Log\LoggerInterface;
 use Symfony\Component\Cache\CacheItem;
+use Symfony\Component\Cache\Exception\LogicException;
 use Symfony\Component\EventDispatcher\Attribute\AsEventListener;
 use Tourze\JsonRPC\Core\Event\AfterMethodApplyEvent;
 use Tourze\JsonRPC\Core\Event\BeforeMethodApplyEvent;
 use Tourze\JsonRPC\Core\Model\JsonRpcRequest;
 use Tourze\JsonRPCCacheBundle\Procedure\CacheableProcedure;
 
+#[WithMonologChannel(channel: 'json_rpc_cache')]
 class CacheSubscriber
 {
     public function __construct(
-        private readonly AdapterInterface $cache,
-    )
-    {
+        private readonly CacheItemPoolInterface $cache,
+        private readonly LoggerInterface $logger,
+    ) {
     }
 
     /**
@@ -52,7 +56,9 @@ class CacheSubscriber
         $item->set($event->getResult());
         $item->expiresAfter($procedure->getCacheDuration($event->getRequest()));
 
-        $this->assignTags($item, $procedure, $event->getRequest());
+        if ($item instanceof CacheItem) {
+            $this->assignTags($item, $procedure, $event->getRequest());
+        }
 
         $this->cache->save($item);
     }
@@ -64,14 +70,23 @@ class CacheSubscriber
     {
         $tags = [];
         foreach ($procedure->getCacheTags($request) as $tag) {
-            if (!$tag) {
+            if ('' === $tag) {
                 continue;
             }
             $tags[] = $tag;
         }
-        if (empty($tags)) {
+        if ([] === $tags) {
             return;
         }
-        $item->tag($tags);
+
+        try {
+            $item->tag($tags);
+        } catch (LogicException $e) {
+            // 缓存池不支持标签功能时，忽略标签设置
+            // 缓存仍然可以正常工作，只是无法按标签清理
+            $this->logger->error('获取缓存标签失败，缓存不支持标签功能', [
+                'exception' => $e,
+            ]);
+        }
     }
 }

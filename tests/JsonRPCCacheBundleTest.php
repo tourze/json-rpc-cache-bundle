@@ -1,15 +1,19 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Tourze\JsonRPCCacheBundle\Tests;
 
-use PHPUnit\Framework\TestCase;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 use Tourze\JsonRPCCacheBundle\JsonRPCCacheBundle;
+use Tourze\PHPUnitSymfonyKernelTest\AbstractBundleTestCase;
 
-class JsonRPCCacheBundleTest extends TestCase
+/**
+ * @internal
+ */
+#[CoversClass(JsonRPCCacheBundle::class)]
+#[RunTestsInSeparateProcesses]
+final class JsonRPCCacheBundleTest extends AbstractBundleTestCase
 {
-    public function testInstantiation(): void
-    {
-        $bundle = new JsonRPCCacheBundle();
-        $this->assertInstanceOf(JsonRPCCacheBundle::class, $bundle);
-    }
-} 
+}

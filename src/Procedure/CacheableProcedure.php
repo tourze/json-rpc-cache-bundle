@@ -19,9 +19,10 @@ abstract class CacheableProcedure extends BaseProcedure implements ServiceSubscr
     protected function buildParamCacheKey(JsonRpcParams $params): string
     {
         $parts = [
-            str_replace('\\', '-', static::class),
+            str_replace('\\', '-', $this::class),
             md5(Json::encode($params->toArray())),
         ];
+
         return implode('-', $parts);
     }
 
@@ -40,6 +41,8 @@ abstract class CacheableProcedure extends BaseProcedure implements ServiceSubscr
      * 缓存标签
      * 如果希望不使用标签，可以yield null；
      * 一般这里使用实体来关联，用 yield CacheHelper::getClassTags(Code::class); 这种写法
+     *
+     * @return iterable<string>
      */
     abstract public function getCacheTags(JsonRpcRequest $request): iterable;
 }
