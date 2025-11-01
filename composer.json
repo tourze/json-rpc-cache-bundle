@@ -21,7 +21,7 @@
     "tourze/bundle-dependency": "1.*",
     "tourze/json-rpc-core": "1.0.*",
     "tourze/json-rpc-security-bundle": "1.0.*",
-    "tourze/symfony-dependency-service-loader": "1.*",
+    "tourze/symfony-dependency-service-loader": "1.0.*",
     "yiisoft/json": "^1.0"
   },
   "require-dev": {
