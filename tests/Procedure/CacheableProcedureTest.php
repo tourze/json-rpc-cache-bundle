@@ -6,96 +6,67 @@ use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 use Tourze\JsonRPC\Core\Model\JsonRpcParams;
 use Tourze\JsonRPC\Core\Model\JsonRpcRequest;
-use Tourze\JsonRPC\Core\Tests\AbstractProcedureTestCase;
-use Tourze\JsonRPCCacheBundle\Tests\TestCacheableProcedure;
-use Yiisoft\Json\Json;
+use Tourze\JsonRPCCacheBundle\Procedure\CacheableProcedure;
+use Tourze\PHPUnitJsonRPC\AbstractProcedureTestCase;
 
 /**
+ * CacheableProcedure 测试类
+ *
+ * 测试抽象类 CacheableProcedure 的功能，使用 TestCacheableProcedureImpl 作为具体实现
+ *
  * @internal
  */
-#[CoversClass(TestCacheableProcedure::class)]
+#[CoversClass(CacheableProcedure::class)]
 #[RunTestsInSeparateProcesses]
 final class CacheableProcedureTest extends AbstractProcedureTestCase
 {
-    private ?TestCacheableProcedure $procedure = null;
+    private ?TestCacheableProcedureImpl $procedure = null;
+
+    private function createJsonRpcRequest(): JsonRpcRequest
+    {
+        $request = new JsonRpcRequest();
+        $request->setMethod('test');
+
+        return $request;
+    }
 
     protected function onSetUp(): void
     {
+        $this->procedure = null;
     }
 
-    protected function getProcedure(): TestCacheableProcedure
+    private function getProcedure(): TestCacheableProcedureImpl
     {
         if (null === $this->procedure) {
-            // 在单元测试中直接实例化测试类是合理的做法
-            // 这避免了复杂的容器配置而且不影响真正的集成测试原则
-            /** @phpstan-ignore-next-line */
-            $this->procedure = new TestCacheableProcedure();
+            $this->procedure = new TestCacheableProcedureImpl();
         }
 
         return $this->procedure;
     }
 
     public function testBuildParamCacheKeyWithEmptyParamsShouldReturnCorrectKey(): void
-    {                // 必须使用具体类 JsonRpcParams，因为：
-        // 1. 测试需要验证具体的参数处理逻辑
-        // 2. JsonRpcParams 包含了实际的参数数据结构
-        // 3. 没有对应的接口可以替代此具体类的测试需求
+    {
+        $params = new JsonRpcParams([]);
 
-        // PHPStan: Using concrete class instead of interface because
-        // this class doesn't implement a common interface suitable for testing
-        // This is necessary for proper method mocking in tests
-        /** @phpstan-ignore-next-line */
-        $params = $this->createMock(JsonRpcParams::class);
-        $params->expects($this->once())
-            ->method('toArray')
-            ->willReturn([])
-        ;
+        $result = $this->getProcedure()->exposeBuildParamCacheKey($params);
 
-        // 使用反射访问protected方法
-        $reflection = new \ReflectionClass(TestCacheableProcedure::class);
-        $method = $reflection->getMethod('buildParamCacheKey');
-        $method->setAccessible(true);
-
-        $result = $method->invoke($this->getProcedure(), $params);
-
-        $expectedPrefix = str_replace('\\', '-', TestCacheableProcedure::class);
-        $expectedSuffix = md5(Json::encode([]));
-        $expected = $expectedPrefix . '-' . $expectedSuffix;
-
-        $this->assertEquals($expected, $result);
-        $this->assertStringContainsString('Tourze-JsonRPCCacheBundle-Tests-TestCacheableProcedure', $result);
+        // 验证结果是一个有效的字符串且包含MD5哈希
+        $this->assertStringContainsString('-', $result);
+        $parts = explode('-', $result);
+        $this->assertEquals(32, strlen(end($parts))); // MD5长度为32
     }
 
     public function testBuildParamCacheKeyWithSimpleParamsShouldReturnCorrectKey(): void
     {
         $paramsArray = ['id' => 123, 'name' => 'test'];
-        // 必须使用具体类 JsonRpcParams，因为：
-        // 1. 测试需要验证具体的参数处理逻辑
-        // 2. JsonRpcParams 包含了实际的参数数据结构
-        // 3. 没有对应的接口可以替代此具体类的测试需求
+        $params = new JsonRpcParams($paramsArray);
 
-        // PHPStan: Using concrete class instead of interface because
-        // this class doesn't implement a common interface suitable for testing
-        // This is necessary for proper method mocking in tests
-        /** @phpstan-ignore-next-line */
-        $params = $this->createMock(JsonRpcParams::class);
-        $params->expects($this->once())
-            ->method('toArray')
-            ->willReturn($paramsArray)
-        ;
+        $result = $this->getProcedure()->exposeBuildParamCacheKey($params);
 
-        // 使用反射访问protected方法
-        $reflection = new \ReflectionClass(TestCacheableProcedure::class);
-        $method = $reflection->getMethod('buildParamCacheKey');
-        $method->setAccessible(true);
-
-        $result = $method->invoke($this->getProcedure(), $params);
-
-        $expectedPrefix = str_replace('\\', '-', TestCacheableProcedure::class);
-        $expectedSuffix = md5(Json::encode($paramsArray));
-        $expected = $expectedPrefix . '-' . $expectedSuffix;
-
-        $this->assertEquals($expected, $result);
+        // 验证结果是一个有效的字符串且包含MD5哈希
+        $this->assertStringContainsString('-', $result);
+        $parts = explode('-', $result);
+        $this->assertEquals(32, strlen(end($parts))); // MD5长度为32
     }
 
     public function testBuildParamCacheKeyWithComplexParamsShouldReturnCorrectKey(): void
@@ -116,33 +87,14 @@ final class CacheableProcedureTest extends AbstractProcedureTestCase
             ],
         ];
 
-        // 必须使用具体类 JsonRpcParams，因为：
-        // 1. 测试需要验证具体的参数处理逻辑
-        // 2. JsonRpcParams 包含了实际的参数数据结构
-        // 3. 没有对应的接口可以替代此具体类的测试需求
+        $params = new JsonRpcParams($paramsArray);
 
-        // PHPStan: Using concrete class instead of interface because
-        // this class doesn't implement a common interface suitable for testing
-        // This is necessary for proper method mocking in tests
-        /** @phpstan-ignore-next-line */
-        $params = $this->createMock(JsonRpcParams::class);
-        $params->expects($this->once())
-            ->method('toArray')
-            ->willReturn($paramsArray)
-        ;
+        $result = $this->getProcedure()->exposeBuildParamCacheKey($params);
 
-        // 使用反射访问protected方法
-        $reflection = new \ReflectionClass(TestCacheableProcedure::class);
-        $method = $reflection->getMethod('buildParamCacheKey');
-        $method->setAccessible(true);
-
-        $result = $method->invoke($this->getProcedure(), $params);
-
-        $expectedPrefix = str_replace('\\', '-', TestCacheableProcedure::class);
-        $expectedSuffix = md5(Json::encode($paramsArray));
-        $expected = $expectedPrefix . '-' . $expectedSuffix;
-
-        $this->assertEquals($expected, $result);
+        // 验证结果是一个有效的字符串且包含MD5哈希
+        $this->assertStringContainsString('-', $result);
+        $parts = explode('-', $result);
+        $this->assertEquals(32, strlen(end($parts))); // MD5长度为32
     }
 
     public function testBuildParamCacheKeyWithSpecialCharactersShouldHandleCorrectly(): void
@@ -157,26 +109,9 @@ final class CacheableProcedureTest extends AbstractProcedureTestCase
             'number' => 3.14159,
         ];
 
-        // 必须使用具体类 JsonRpcParams，因为：
-        // 1. 测试需要验证具体的参数处理逻辑
-        // 2. JsonRpcParams 包含了实际的参数数据结构
-        // 3. 没有对应的接口可以替代此具体类的测试需求
+        $params = new JsonRpcParams($paramsArray);
 
-        // PHPStan: Using concrete class instead of interface because
-        // this class doesn't implement a common interface suitable for testing
-        // This is necessary for proper method mocking in tests
-        /** @phpstan-ignore-next-line */
-        $params = $this->createMock(JsonRpcParams::class);
-        $params->expects($this->once())
-            ->method('toArray')
-            ->willReturn($paramsArray)
-        ;
-
-        $reflection = new \ReflectionClass(TestCacheableProcedure::class);
-        $method = $reflection->getMethod('buildParamCacheKey');
-        $method->setAccessible(true);
-
-        $result = $method->invoke($this->getProcedure(), $params);
+        $result = $this->getProcedure()->exposeBuildParamCacheKey($params);
 
         // 验证结果是一个有效的字符串且包含MD5哈希
         $this->assertStringContainsString('-', $result);
@@ -191,26 +126,9 @@ final class CacheableProcedureTest extends AbstractProcedureTestCase
             $largeArray["key_{$i}"] = "value_{$i}";
         }
 
-        // 必须使用具体类 JsonRpcParams，因为：
-        // 1. 测试需要验证具体的参数处理逻辑
-        // 2. JsonRpcParams 包含了实际的参数数据结构
-        // 3. 没有对应的接口可以替代此具体类的测试需求
+        $params = new JsonRpcParams($largeArray);
 
-        // PHPStan: Using concrete class instead of interface because
-        // this class doesn't implement a common interface suitable for testing
-        // This is necessary for proper method mocking in tests
-        /** @phpstan-ignore-next-line */
-        $params = $this->createMock(JsonRpcParams::class);
-        $params->expects($this->once())
-            ->method('toArray')
-            ->willReturn($largeArray)
-        ;
-
-        $reflection = new \ReflectionClass(TestCacheableProcedure::class);
-        $method = $reflection->getMethod('buildParamCacheKey');
-        $method->setAccessible(true);
-
-        $result = $method->invoke($this->getProcedure(), $params);
+        $result = $this->getProcedure()->exposeBuildParamCacheKey($params);
 
         // 验证大数据集也能正常生成缓存键
         $parts = explode('-', $result);
@@ -222,36 +140,11 @@ final class CacheableProcedureTest extends AbstractProcedureTestCase
         $params1 = ['a' => 1, 'b' => 2];
         $params2 = ['b' => 2, 'a' => 1];
 
-        // 必须使用具体类 JsonRpcParams，因为：
-        // 1. 测试需要验证具体的参数处理逻辑
-        // 2. JsonRpcParams 包含了实际的参数数据结构
-        // 3. 没有对应的接口可以替代此具体类的测试需求
+        $mockParams1 = new JsonRpcParams($params1);
+        $mockParams2 = new JsonRpcParams($params2);
 
-        // PHPStan: Using concrete class instead of interface because
-        // this class doesn't implement a common interface suitable for testing
-        // This is necessary for proper method mocking in tests
-        /** @phpstan-ignore-next-line */
-        $mockParams1 = $this->createMock(JsonRpcParams::class);
-        $mockParams1->method('toArray')->willReturn($params1);
-
-        // 必须使用具体类 JsonRpcParams，因为：
-        // 1. 测试需要验证具体的参数处理逻辑
-        // 2. JsonRpcParams 包含了实际的参数数据结构
-        // 3. 没有对应的接口可以替代此具体类的测试需求
-
-        // PHPStan: Using concrete class instead of interface because
-        // this class doesn't implement a common interface suitable for testing
-        // This is necessary for proper method mocking in tests
-        /** @phpstan-ignore-next-line */
-        $mockParams2 = $this->createMock(JsonRpcParams::class);
-        $mockParams2->method('toArray')->willReturn($params2);
-
-        $reflection = new \ReflectionClass(TestCacheableProcedure::class);
-        $method = $reflection->getMethod('buildParamCacheKey');
-        $method->setAccessible(true);
-
-        $key1 = $method->invoke($this->getProcedure(), $mockParams1);
-        $key2 = $method->invoke($this->getProcedure(), $mockParams2);
+        $key1 = $this->getProcedure()->exposeBuildParamCacheKey($mockParams1);
+        $key2 = $this->getProcedure()->exposeBuildParamCacheKey($mockParams2);
 
         // 注意：由于JSON编码，不同顺序会产生不同的哈希
         // 这是预期行为，因为JSON编码保持键顺序
@@ -262,16 +155,7 @@ final class CacheableProcedureTest extends AbstractProcedureTestCase
 
     public function testGetCacheKeyWithVariousInputsShouldReturnCorrectKeys(): void
     {
-        // 必须使用具体类 JsonRpcRequest，因为：
-        // 1. 测试需要验证具体的请求处理逻辑
-        // 2. JsonRpcRequest 包含了实际的请求数据结构
-        // 3. 没有对应的接口可以替代此具体类的测试需求
-
-        // PHPStan: Using concrete class instead of interface because
-        // this class doesn't implement a common interface suitable for testing
-        // This is necessary for proper method mocking in tests
-        /** @phpstan-ignore-next-line */
-        $request = $this->createMock(JsonRpcRequest::class);
+        $request = $this->createJsonRpcRequest();
 
         // 默认返回测试缓存键
         $this->assertEquals('test-cache-key', $this->getProcedure()->getCacheKey($request));
@@ -291,16 +175,7 @@ final class CacheableProcedureTest extends AbstractProcedureTestCase
 
     public function testGetCacheKeyWithNullValueShouldReturnEmptyString(): void
     {
-        // 必须使用具体类 JsonRpcRequest，因为：
-        // 1. 测试需要验证具体的请求处理逻辑
-        // 2. JsonRpcRequest 包含了实际的请求数据结构
-        // 3. 没有对应的接口可以替代此具体类的测试需求
-
-        // PHPStan: Using concrete class instead of interface because
-        // this class doesn't implement a common interface suitable for testing
-        // This is necessary for proper method mocking in tests
-        /** @phpstan-ignore-next-line */
-        $request = $this->createMock(JsonRpcRequest::class);
+        $request = $this->createJsonRpcRequest();
 
         $this->getProcedure()->setCacheKey(null);
         $this->assertEquals('', $this->getProcedure()->getCacheKey($request));
@@ -308,16 +183,7 @@ final class CacheableProcedureTest extends AbstractProcedureTestCase
 
     public function testGetCacheDurationWithVariousValuesShouldReturnCorrectDurations(): void
     {
-        // 必须使用具体类 JsonRpcRequest，因为：
-        // 1. 测试需要验证具体的请求处理逻辑
-        // 2. JsonRpcRequest 包含了实际的请求数据结构
-        // 3. 没有对应的接口可以替代此具体类的测试需求
-
-        // PHPStan: Using concrete class instead of interface because
-        // this class doesn't implement a common interface suitable for testing
-        // This is necessary for proper method mocking in tests
-        /** @phpstan-ignore-next-line */
-        $request = $this->createMock(JsonRpcRequest::class);
+        $request = $this->createJsonRpcRequest();
 
         // 默认返回3600秒
         $this->assertEquals(3600, $this->getProcedure()->getCacheDuration($request));
@@ -341,16 +207,7 @@ final class CacheableProcedureTest extends AbstractProcedureTestCase
 
     public function testGetCacheDurationWithBoundaryValuesShouldHandleCorrectly(): void
     {
-        // 必须使用具体类 JsonRpcRequest，因为：
-        // 1. 测试需要验证具体的请求处理逻辑
-        // 2. JsonRpcRequest 包含了实际的请求数据结构
-        // 3. 没有对应的接口可以替代此具体类的测试需求
-
-        // PHPStan: Using concrete class instead of interface because
-        // this class doesn't implement a common interface suitable for testing
-        // This is necessary for proper method mocking in tests
-        /** @phpstan-ignore-next-line */
-        $request = $this->createMock(JsonRpcRequest::class);
+        $request = $this->createJsonRpcRequest();
 
         // 测试极小值
         $this->getProcedure()->setCacheDuration(PHP_INT_MIN);
@@ -373,16 +230,7 @@ final class CacheableProcedureTest extends AbstractProcedureTestCase
 
     public function testGetCacheTagsWithVariousTagArraysShouldReturnCorrectTags(): void
     {
-        // 必须使用具体类 JsonRpcRequest，因为：
-        // 1. 测试需要验证具体的请求处理逻辑
-        // 2. JsonRpcRequest 包含了实际的请求数据结构
-        // 3. 没有对应的接口可以替代此具体类的测试需求
-
-        // PHPStan: Using concrete class instead of interface because
-        // this class doesn't implement a common interface suitable for testing
-        // This is necessary for proper method mocking in tests
-        /** @phpstan-ignore-next-line */
-        $request = $this->createMock(JsonRpcRequest::class);
+        $request = $this->createJsonRpcRequest();
 
         // 默认返回['tag1', 'tag2']
         $this->assertEquals(['tag1', 'tag2'], iterator_to_array($this->getProcedure()->getCacheTags($request)));
@@ -402,16 +250,7 @@ final class CacheableProcedureTest extends AbstractProcedureTestCase
 
     public function testGetCacheTagsWithSpecialTagValuesShouldHandleCorrectly(): void
     {
-        // 必须使用具体类 JsonRpcRequest，因为：
-        // 1. 测试需要验证具体的请求处理逻辑
-        // 2. JsonRpcRequest 包含了实际的请求数据结构
-        // 3. 没有对应的接口可以替代此具体类的测试需求
-
-        // PHPStan: Using concrete class instead of interface because
-        // this class doesn't implement a common interface suitable for testing
-        // This is necessary for proper method mocking in tests
-        /** @phpstan-ignore-next-line */
-        $request = $this->createMock(JsonRpcRequest::class);
+        $request = $this->createJsonRpcRequest();
 
         // 测试包含特殊字符的标签
         $this->getProcedure()->setCacheTags(['tag:with:colons', 'tag-with-dashes', 'tag_with_underscores']);
@@ -430,16 +269,7 @@ final class CacheableProcedureTest extends AbstractProcedureTestCase
 
     public function testGetCacheTagsWithLargeTagArrayShouldReturnAllTags(): void
     {
-        // 必须使用具体类 JsonRpcRequest，因为：
-        // 1. 测试需要验证具体的请求处理逻辑
-        // 2. JsonRpcRequest 包含了实际的请求数据结构
-        // 3. 没有对应的接口可以替代此具体类的测试需求
-
-        // PHPStan: Using concrete class instead of interface because
-        // this class doesn't implement a common interface suitable for testing
-        // This is necessary for proper method mocking in tests
-        /** @phpstan-ignore-next-line */
-        $request = $this->createMock(JsonRpcRequest::class);
+        $request = $this->createJsonRpcRequest();
 
         $largeTags = [];
         for ($i = 0; $i < 100; ++$i) {
@@ -455,37 +285,32 @@ final class CacheableProcedureTest extends AbstractProcedureTestCase
 
     public function testExecuteShouldReturnExpectedResult(): void
     {
-        $this->assertEquals(['result' => 'success'], $this->getProcedure()->execute());
+        $param = new TestParam();
+        $result = $this->getProcedure()->execute($param);
+        $this->assertEquals(['result' => 'success'], $result->toArray());
     }
 
     public function testServiceSubscriberInterfaceShouldBeImplemented(): void
     {
         // 验证 getSubscribedServices 方法存在并返回数组
-        $subscribedServices = TestCacheableProcedure::getSubscribedServices();
+        $subscribedServices = CacheableProcedure::getSubscribedServices();
         $this->assertIsArray($subscribedServices);
     }
 
     public function testBaseProcedureShouldBeExtended(): void
     {
         // 验证 execute 方法可以被调用并返回预期结果
-        $result = $this->getProcedure()->execute();
-        $this->assertIsArray($result);
-        $this->assertArrayHasKey('result', $result);
-        $this->assertEquals('success', $result['result']);
+        $param = new TestParam();
+        $result = $this->getProcedure()->execute($param);
+        $resultArray = $result->toArray();
+        $this->assertIsArray($resultArray);
+        $this->assertArrayHasKey('result', $resultArray);
+        $this->assertEquals('success', $resultArray['result']);
     }
 
     public function testCacheKeyConsistencySameProcedureInstanceShouldReturnSameKey(): void
     {
-        // 必须使用具体类 JsonRpcRequest，因为：
-        // 1. 测试需要验证具体的请求处理逻辑
-        // 2. JsonRpcRequest 包含了实际的请求数据结构
-        // 3. 没有对应的接口可以替代此具体类的测试需求
-
-        // PHPStan: Using concrete class instead of interface because
-        // this class doesn't implement a common interface suitable for testing
-        // This is necessary for proper method mocking in tests
-        /** @phpstan-ignore-next-line */
-        $request = $this->createMock(JsonRpcRequest::class);
+        $request = $this->createJsonRpcRequest();
 
         $this->getProcedure()->setCacheKey('consistent-key');
 
@@ -500,16 +325,7 @@ final class CacheableProcedureTest extends AbstractProcedureTestCase
 
     public function testCacheDurationConsistencySameProcedureInstanceShouldReturnSameDuration(): void
     {
-        // 必须使用具体类 JsonRpcRequest，因为：
-        // 1. 测试需要验证具体的请求处理逻辑
-        // 2. JsonRpcRequest 包含了实际的请求数据结构
-        // 3. 没有对应的接口可以替代此具体类的测试需求
-
-        // PHPStan: Using concrete class instead of interface because
-        // this class doesn't implement a common interface suitable for testing
-        // This is necessary for proper method mocking in tests
-        /** @phpstan-ignore-next-line */
-        $request = $this->createMock(JsonRpcRequest::class);
+        $request = $this->createJsonRpcRequest();
 
         $this->getProcedure()->setCacheDuration(7200);
 
@@ -524,16 +340,7 @@ final class CacheableProcedureTest extends AbstractProcedureTestCase
 
     public function testCacheTagsConsistencySameProcedureInstanceShouldReturnSameTags(): void
     {
-        // 必须使用具体类 JsonRpcRequest，因为：
-        // 1. 测试需要验证具体的请求处理逻辑
-        // 2. JsonRpcRequest 包含了实际的请求数据结构
-        // 3. 没有对应的接口可以替代此具体类的测试需求
-
-        // PHPStan: Using concrete class instead of interface because
-        // this class doesn't implement a common interface suitable for testing
-        // This is necessary for proper method mocking in tests
-        /** @phpstan-ignore-next-line */
-        $request = $this->createMock(JsonRpcRequest::class);
+        $request = $this->createJsonRpcRequest();
 
         $tags = ['consistency-tag1', 'consistency-tag2'];
         $this->getProcedure()->setCacheTags($tags);

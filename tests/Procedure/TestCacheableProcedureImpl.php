@@ -1,26 +1,27 @@
 <?php
 
-namespace Tourze\JsonRPCCacheBundle\Tests;
+namespace Tourze\JsonRPCCacheBundle\Tests\Procedure;
 
-use Symfony\Component\DependencyInjection\Attribute\Autoconfigure;
 use Tourze\JsonRPC\Core\Attribute\MethodDoc;
 use Tourze\JsonRPC\Core\Attribute\MethodExpose;
 use Tourze\JsonRPC\Core\Attribute\MethodTag;
 use Tourze\JsonRPC\Core\Contracts\RpcParamInterface;
+use Tourze\JsonRPC\Core\Model\JsonRpcParams;
 use Tourze\JsonRPC\Core\Model\JsonRpcRequest;
 use Tourze\JsonRPC\Core\Result\ArrayResult;
 use Tourze\JsonRPCCacheBundle\Procedure\CacheableProcedure;
 
 /**
- * 测试用的可缓存过程类
+ * 用于 CacheableProcedureTest 的测试实现类
+ *
+ * 此类提供了一个具体实现，用于测试抽象类 CacheableProcedure 的功能
  *
  * @internal
  */
-#[Autoconfigure(public: true)]
 #[MethodTag(name: 'test')]
-#[MethodDoc(summary: 'Test Cache Procedure', description: 'A test procedure for cache functionality')]
-#[MethodExpose(method: 'testCacheable')]
-final class TestCacheableProcedure extends CacheableProcedure
+#[MethodDoc(summary: 'Test Cacheable Procedure Implementation')]
+#[MethodExpose(method: 'testCacheableProcedureImpl')]
+final class TestCacheableProcedureImpl extends CacheableProcedure
 {
     private ?string $cacheKey = 'test-cache-key';
 
@@ -62,9 +63,19 @@ final class TestCacheableProcedure extends CacheableProcedure
         $this->cacheDuration = $cacheDuration;
     }
 
-    /** @param array<string|null> $cacheTags */
+    /**
+     * @param array<string|null> $cacheTags
+     */
     public function setCacheTags(array $cacheTags): void
     {
         $this->cacheTags = array_values(array_filter($cacheTags, static fn ($tag): bool => null !== $tag));
+    }
+
+    /**
+     * 暴露 protected 方法用于测试
+     */
+    public function exposeBuildParamCacheKey(JsonRpcParams $params): string
+    {
+        return $this->buildParamCacheKey($params);
     }
 }

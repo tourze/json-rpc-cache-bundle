@@ -4,6 +4,9 @@ namespace Tourze\JsonRPCCacheBundle\Procedure;
 
 use Symfony\Contracts\Service\ServiceMethodsSubscriberTrait;
 use Symfony\Contracts\Service\ServiceSubscriberInterface;
+use Tourze\JsonRPC\Core\Attribute\MethodDoc;
+use Tourze\JsonRPC\Core\Attribute\MethodExpose;
+use Tourze\JsonRPC\Core\Attribute\MethodTag;
 use Tourze\JsonRPC\Core\Model\JsonRpcParams;
 use Tourze\JsonRPC\Core\Model\JsonRpcRequest;
 use Tourze\JsonRPC\Core\Procedure\BaseProcedure;
@@ -12,6 +15,9 @@ use Yiisoft\Json\Json;
 /**
  * 有一些接口，我们需要做缓存控制，默认是根据接口名和参数来做缓存key
  */
+#[MethodTag(name: '可缓存过程')]
+#[MethodDoc(summary: '支持缓存的JsonRPC过程基类')]
+#[MethodExpose(method: 'cacheable.abstract')]
 abstract class CacheableProcedure extends BaseProcedure implements ServiceSubscriberInterface
 {
     use ServiceMethodsSubscriberTrait;

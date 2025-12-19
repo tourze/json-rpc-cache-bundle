@@ -14,7 +14,7 @@ use Tourze\JsonRPC\Core\Model\JsonRpcRequest;
 use Tourze\JsonRPCCacheBundle\Procedure\CacheableProcedure;
 
 #[WithMonologChannel(channel: 'json_rpc_cache')]
-class CacheSubscriber
+final class CacheSubscriber
 {
     public function __construct(
         private readonly CacheItemPoolInterface $cache,
@@ -33,8 +33,14 @@ class CacheSubscriber
             return;
         }
 
+        $request = $event->getRequest();
+        $cacheKey = $procedure->getCacheKey($request);
+        if ('' === $cacheKey) {
+            return;
+        }
+
         // 如果能查到缓存，这里直接返回
-        $item = $this->cache->getItem($procedure->getCacheKey($event->getRequest()));
+        $item = $this->cache->getItem($cacheKey);
         if (!$item->isHit()) {
             return;
         }
@@ -52,12 +58,18 @@ class CacheSubscriber
             return;
         }
 
-        $item = $this->cache->getItem($procedure->getCacheKey($event->getRequest()));
+        $request = $event->getRequest();
+        $cacheKey = $procedure->getCacheKey($request);
+        if ('' === $cacheKey) {
+            return;
+        }
+
+        $item = $this->cache->getItem($cacheKey);
         $item->set($event->getResult());
-        $item->expiresAfter($procedure->getCacheDuration($event->getRequest()));
+        $item->expiresAfter($procedure->getCacheDuration($request));
 
         if ($item instanceof CacheItem) {
-            $this->assignTags($item, $procedure, $event->getRequest());
+            $this->assignTags($item, $procedure, $request);
         }
 
         $this->cache->save($item);
