@@ -20,7 +20,7 @@
     "symfony/yaml": "^7.3",
     "tourze/bundle-dependency": "1.*",
     "tourze/json-rpc-core": "2.0.*",
-    "tourze/json-rpc-security-bundle": "1.0.*",
+    "tourze/json-rpc-security-bundle": "2.0.*",
     "tourze/symfony-dependency-service-loader": "1.0.*",
     "yiisoft/json": "^1.0"
   },
